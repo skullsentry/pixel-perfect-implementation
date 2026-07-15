@@ -420,10 +420,14 @@ function Row({ label, value }: { label: string; value: string }) {
 
 // ---------------- LEDGER VIEW ----------------
 
+type LedgerRow = { id: string; date: string; ref: string; desc: string; debit: number; credit: number; balance: number };
+
 function LedgerView({ mod }: { mod: ModuleDef }) {
-  const entries = useMemo(() => buildLedger(mod), [mod]);
+  const [entries, setEntries] = useState<LedgerRow[]>(() => buildLedger(mod));
   const [q, setQ] = useState("");
   const [tab, setTab] = useState("all");
+  const [openNew, setOpenNew] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const filtered = entries.filter((e) => {
     const okQ = q.trim() === "" || `${e.desc} ${e.ref}`.toLowerCase().includes(q.toLowerCase());
@@ -435,10 +439,21 @@ function LedgerView({ mod }: { mod: ModuleDef }) {
   const totalCredit = entries.reduce((a, b) => a + b.credit, 0);
   const balance = totalDebit - totalCredit;
 
+  const addEntry = (row: { date: string; ref: string; desc: string; debit: number; credit: number }) => {
+    setEntries((prev) => {
+      const prevBal = prev.length ? prev[prev.length - 1].balance : 0;
+      const newBal = prevBal + row.debit - row.credit;
+      return [...prev, { id: `${mod.slug}-le-${Date.now()}`, ...row, balance: newBal }];
+    });
+    setOpenNew(false);
+    setToast("Journal entry posted");
+    setTimeout(() => setToast(null), 2200);
+  };
+
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="New Entry" onPrimary={() => alert("New journal entry — coming soon")} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="New Entry" onPrimary={() => setOpenNew(true)} />} />
       <KpiStrip items={[
         { label: "Total Debit", value: money(totalDebit), sub: "This period", icon: ArrowUpRight, grad: "var(--gradient-mint)", tone: "up" },
         { label: "Total Credit", value: money(totalCredit), sub: "This period", icon: ArrowDownRight, grad: "var(--gradient-sunset)", tone: "down" },
@@ -486,11 +501,68 @@ function LedgerView({ mod }: { mod: ModuleDef }) {
           </table>
         </div>
       </section>
+
+      {openNew && <LedgerEntryModal mod={mod} grad={mod.grad} onClose={() => setOpenNew(false)} onSave={addEntry} />}
+      {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
 
-function buildLedger(mod: ModuleDef) {
+function LedgerEntryModal({ mod, grad, onClose, onSave }: { mod: ModuleDef; grad: string; onClose: () => void; onSave: (r: { date: string; ref: string; desc: string; debit: number; credit: number }) => void }) {
+  const [form, setForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    ref: `${mod.slug.slice(0, 2).toUpperCase()}-${String(Math.floor(4000 + Math.random() * 900))}`,
+    desc: "",
+    kind: "debit" as "debit" | "credit",
+    amount: 0,
+  });
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.desc.trim() || form.amount <= 0) return;
+    onSave({
+      date: form.date, ref: form.ref, desc: form.desc,
+      debit: form.kind === "debit" ? form.amount : 0,
+      credit: form.kind === "credit" ? form.amount : 0,
+    });
+  };
+  return (
+    <ModalShell title="New Journal Entry" grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button type="submit" form="ledger-form" className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Save size={15} /> Post Entry
+          </button>
+        </>
+      }>
+      <form id="ledger-form" onSubmit={submit} className="grid grid-cols-2 gap-3">
+        <Field label="Date"><input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" /></Field>
+        <Field label="Reference"><input value={form.ref} onChange={(e) => setForm({ ...form, ref: e.target.value })} className="input" /></Field>
+        <Field label="Description" full><input value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} placeholder="Bank deposit, payment received…" className="input" required /></Field>
+        <Field label="Type">
+          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as "debit" | "credit" })} className="input">
+            <option value="debit">Debit</option>
+            <option value="credit">Credit</option>
+          </select>
+        </Field>
+        <Field label="Amount (Rs)"><input type="number" min={0} value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="input" required /></Field>
+      </form>
+    </ModalShell>
+  );
+}
+
+function Toast({ message, grad }: { message: string; grad: string }) {
+  return (
+    <div className="fixed bottom-6 right-6 z-[60] glass-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-[var(--shadow-glow)]">
+      <div className="h-8 w-8 rounded-lg grid place-items-center text-primary-foreground" style={{ background: grad }}>
+        <CheckCircle2 size={15} />
+      </div>
+      <span className="text-sm font-semibold">{message}</span>
+    </div>
+  );
+}
+
+function buildLedger(mod: ModuleDef): LedgerRow[] {
   const rand = seedRand(mod.slug + "-l");
   const descs = mod.features.concat(["Opening balance", "Bank deposit", "Cash withdrawal", "Adjustment entry"]);
   const prefix = mod.slug.slice(0, 2).toUpperCase();
