@@ -759,6 +759,9 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
     { key: "users", label: "Users" },
   ];
   return (
+    <>
+      <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Changes" onPrimary={() => alert("Settings saved")} />} />
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
       <aside className="glass-card rounded-2xl p-3 h-fit">
         {tabs.map((t) => (
