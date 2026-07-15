@@ -977,14 +977,15 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
           </>
         )}
         <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
-          <button className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
-          <button className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
+          <button onClick={() => setTab("business")} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button onClick={saveChanges} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
             <CheckCircle2 size={15} /> Save Changes
           </button>
         </div>
       </section>
       <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:12px;border:1px solid hsl(var(--border));background:oklch(1 0 0 / 0.02);font-size:13px;outline:none;color:inherit;transition:border-color .15s}.input:focus{border-color:oklch(0.7 0.19 285 / 0.7)}`}</style>
     </div>
+    {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
