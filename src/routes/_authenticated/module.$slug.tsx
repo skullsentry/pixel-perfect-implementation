@@ -589,6 +589,8 @@ function ReportView({ mod }: { mod: ModuleDef }) {
   const rows = useMemo(() => buildReport(mod), [mod]);
   const [tab, setTab] = useState("monthly");
   const trend = useMemo(() => buildTrend(mod), [mod]);
+  const [openGen, setOpenGen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const totalRevenue = rows.reduce((a, b) => a + b.revenue, 0);
   const totalUnits = rows.reduce((a, b) => a + b.units, 0);
@@ -598,7 +600,7 @@ function ReportView({ mod }: { mod: ModuleDef }) {
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Generate Report" onPrimary={() => window.print()} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Generate Report" onPrimary={() => setOpenGen(true)} />} />
       <KpiStrip items={[
         { label: "Revenue", value: money(totalRevenue), sub: "This period", icon: TrendingUp, grad: mod.grad, tone: "up" },
         { label: "Units Moved", value: fmt(totalUnits), sub: `${rows.length} items`, icon: BarChart3, grad: "var(--gradient-accent)" },
