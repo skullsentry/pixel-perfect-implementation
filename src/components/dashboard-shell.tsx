@@ -1,5 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell, Search, Store, Globe, LogOut, LayoutDashboard, Boxes, Warehouse, Truck,
   ReceiptText, BookUser, BookOpenText, Users, BarChart3, AlertTriangle, Settings,
