@@ -437,6 +437,8 @@ function LedgerView({ mod }: { mod: ModuleDef }) {
 
   return (
     <>
+      <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
+        actions={<HeaderActions grad={mod.grad} primaryLabel="New Entry" onPrimary={() => alert("New journal entry — coming soon")} />} />
       <KpiStrip items={[
         { label: "Total Debit", value: money(totalDebit), sub: "This period", icon: ArrowUpRight, grad: "var(--gradient-mint)", tone: "up" },
         { label: "Total Credit", value: money(totalCredit), sub: "This period", icon: ArrowDownRight, grad: "var(--gradient-sunset)", tone: "down" },
