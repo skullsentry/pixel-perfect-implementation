@@ -220,7 +220,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
             <p className="text-sm font-semibold truncate">Haji Karim Khan</p>
             <p className="text-[11px] text-muted-foreground">Admin</p>
           </div>
-          <button className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"><LogOut size={15} /></button>
+          <button onClick={signOut} aria-label="Sign out" className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"><LogOut size={15} /></button>
         </div>
       </aside>
     </>
