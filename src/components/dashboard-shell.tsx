@@ -1,5 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell, Search, Store, Globe, LogOut, LayoutDashboard, Boxes, Warehouse, Truck,
   ReceiptText, BookUser, BookOpenText, Users, BarChart3, AlertTriangle, Settings,
@@ -98,6 +100,14 @@ function findParent(pathname: string): string | null {
 }
 
 function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const signOut = async () => {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const initialParent = findParent(pathname) ?? "Product Setup";
   const [openMenu, setOpenMenu] = useState<string | null>(initialParent);
@@ -210,7 +220,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
             <p className="text-sm font-semibold truncate">Haji Karim Khan</p>
             <p className="text-[11px] text-muted-foreground">Admin</p>
           </div>
-          <button className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"><LogOut size={15} /></button>
+          <button onClick={signOut} aria-label="Sign out" className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"><LogOut size={15} /></button>
         </div>
       </aside>
     </>
