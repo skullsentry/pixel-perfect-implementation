@@ -180,16 +180,81 @@ export const deleteProduct = createServerFn({ method: "POST" })
 export const getOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [p, c, b, u] = await Promise.all([
-      context.supabase.from("products").select("id", { count: "exact", head: true }),
-      context.supabase.from("categories").select("id", { count: "exact", head: true }),
-      context.supabase.from("brands").select("id", { count: "exact", head: true }),
-      context.supabase.from("units").select("id", { count: "exact", head: true }),
+    const [prods, cats, brnds, unts] = await Promise.all([
+      context.supabase.from("products").select("id, name, sku, cost_price, retail_price, stock_shelf, stock_warehouse, min_stock, category_id, brand_id, unit_id, status"),
+      context.supabase.from("categories").select("id, name"),
+      context.supabase.from("brands").select("id, name"),
+      context.supabase.from("units").select("id, name"),
     ]);
+    const products = prods.data ?? [];
+    const categories = cats.data ?? [];
+    const brands = brnds.data ?? [];
+    const units = unts.data ?? [];
+
+    const catMap = new Map(categories.map((c) => [c.id, c.name]));
+    const brandMap = new Map(brands.map((b) => [b.id, b.name]));
+    const unitMap = new Map(units.map((u) => [u.id, u.name]));
+
+    let costValue = 0;
+    let retailValue = 0;
+    let totalUnits = 0;
+    const lowStock: Array<{ id: string; name: string; sku: string | null; qty: number; unit: string; severity: "danger" | "warn" }> = [];
+    const catAgg = new Map<string, { name: string; units: number; value: number }>();
+
+    for (const p of products) {
+      const qty = (p.stock_shelf ?? 0) + (p.stock_warehouse ?? 0);
+      totalUnits += qty;
+      costValue += qty * Number(p.cost_price ?? 0);
+      retailValue += qty * Number(p.retail_price ?? 0);
+      if (qty <= (p.min_stock ?? 0)) {
+        lowStock.push({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          qty,
+          unit: p.unit_id ? unitMap.get(p.unit_id) ?? "" : "",
+          severity: qty === 0 ? "danger" : "warn",
+        });
+      }
+      const catName = p.category_id ? catMap.get(p.category_id) ?? "Uncategorized" : "Uncategorized";
+      const agg = catAgg.get(catName) ?? { name: catName, units: 0, value: 0 };
+      agg.units += qty;
+      agg.value += qty * Number(p.retail_price ?? 0);
+      catAgg.set(catName, agg);
+    }
+
+    const topStock = [...products]
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        brand: p.brand_id ? brandMap.get(p.brand_id) ?? "—" : "—",
+        category: p.category_id ? catMap.get(p.category_id) ?? "—" : "—",
+        qty: (p.stock_shelf ?? 0) + (p.stock_warehouse ?? 0),
+        retail: Number(p.retail_price ?? 0),
+        value: ((p.stock_shelf ?? 0) + (p.stock_warehouse ?? 0)) * Number(p.retail_price ?? 0),
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
     return {
-      products: p.count ?? 0,
-      categories: c.count ?? 0,
-      brands: b.count ?? 0,
-      units: u.count ?? 0,
+      counts: {
+        products: products.length,
+        categories: categories.length,
+        brands: brands.length,
+        units: units.length,
+      },
+      costValue,
+      retailValue,
+      potentialProfit: retailValue - costValue,
+      totalUnits,
+      lowStock,
+      topStock,
+      categoryBreakdown: [...catAgg.values()].sort((a, b) => b.value - a.value),
+      // legacy fields for older callers
+      products: products.length,
+      categories: categories.length,
+      brands: brands.length,
+      units: units.length,
     };
   });
