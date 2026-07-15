@@ -90,6 +90,12 @@ export const nav: { label: string; items: NavItem[] }[] = [
       ]},
     ],
   },
+  {
+    label: "System",
+    items: [
+      { icon: Settings, name: "Shop Settings", to: "/module/shop-settings" },
+    ],
+  },
 ];
 
 function findParent(pathname: string): string | null {
