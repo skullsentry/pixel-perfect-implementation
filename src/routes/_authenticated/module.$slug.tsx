@@ -832,7 +832,7 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
 
 function IconBtn({ children, label, onClick }: { children: ReactNode; label: string; onClick?: () => void }) {
   return (
-    <button aria-label={label} className="h-8 w-8 grid place-items-center rounded-lg border border-border bg-background/40 text-muted-foreground hover:text-foreground hover:border-primary/50 transition">
+    <button aria-label={label} onClick={onClick} className="h-8 w-8 grid place-items-center rounded-lg border border-border bg-background/40 text-muted-foreground hover:text-foreground hover:border-primary/50 transition">
       {children}
     </button>
   );
