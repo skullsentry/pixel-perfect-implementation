@@ -4,8 +4,8 @@ import { DashboardShell, PageHeader } from "@/components/dashboard-shell";
 import { MODULE_MAP, type ModuleDef } from "@/lib/modules";
 import {
   ArrowLeft, Plus, Search, Filter, Download, MoreHorizontal, Eye, Pencil,
-  Calendar, TrendingUp, TrendingDown, CheckCircle2, Clock, XCircle,
-  ArrowUpRight, ArrowDownRight, FileText, Printer, Send, Sparkles,
+  Calendar, TrendingUp, TrendingDown, CheckCircle2, Clock, XCircle, X, Save,
+  ArrowUpRight, ArrowDownRight, FileText, Printer, Send, Sparkles, Trash2,
   BarChart3, LineChart as LineChartIcon,
 } from "lucide-react";
 
