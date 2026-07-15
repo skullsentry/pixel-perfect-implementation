@@ -28,7 +28,6 @@ export const nav: { label: string; items: NavItem[] }[] = [
         { name: "Brands & Companies", to: "/brands" },
         { name: "Units of Measure", to: "/units" },
       ]},
-      { icon: Settings, name: "Shop Settings", to: "/module/shop-settings" },
       { icon: Warehouse, name: "Warehouses", children: [
         { name: "Warehouse List", to: "/module/warehouse-list" },
         { name: "Stock Transfer", to: "/module/stock-transfer" },
@@ -89,6 +88,12 @@ export const nav: { label: string; items: NavItem[] }[] = [
         { name: "Purchase Report", to: "/module/purchase-report" },
         { name: "Sales Report", to: "/module/sales-report" },
       ]},
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { icon: Settings, name: "Shop Settings", to: "/module/shop-settings" },
     ],
   },
 ];
