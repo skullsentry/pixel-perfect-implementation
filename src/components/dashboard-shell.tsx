@@ -19,20 +19,27 @@ export const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "Main",
     items: [
-      { icon: LayoutDashboard, name: "Business Control", children: [
-        { name: "Overview", to: "/" }, { name: "Live Activity" }, { name: "Daybook" },
-      ]},
+      { icon: LayoutDashboard, name: "Business Control", to: "/" },
       { icon: Boxes, name: "Product Setup", children: [
-        { name: "All Products", to: "/products" },
+        { name: "Products", to: "/products" },
         { name: "Categories", to: "/categories" },
         { name: "Brands & Companies", to: "/brands" },
         { name: "Units of Measure", to: "/units" },
       ]},
+      { icon: Settings, name: "Shop Settings" },
       { icon: Warehouse, name: "Warehouses", children: [
-        { name: "Locations" }, { name: "Stock Transfer" }, { name: "Stock Adjustment" },
+        { name: "Warehouse List" },
+        { name: "Stock Transfer" },
+        { name: "Stock Adjustment" },
+        { name: "Low Stock Alerts" },
       ]},
       { icon: Truck, name: "Purchases", children: [
-        { name: "New Purchase" }, { name: "Purchase History" }, { name: "Purchase Returns" },
+        { name: "Purchase Entry" },
+        { name: "Purchase List" },
+        { name: "Purchase Orders" },
+        { name: "Lost & Damaged Items" },
+        { name: "Purchase Return" },
+        { name: "Supplier Payments" },
       ]},
     ],
   },
@@ -40,13 +47,23 @@ export const nav: { label: string; items: NavItem[] }[] = [
     label: "Finance",
     items: [
       { icon: ReceiptText, name: "Sales & Billing", children: [
-        { name: "New Invoice" }, { name: "Invoice History" }, { name: "Sales Returns" }, { name: "Quotations" },
+        { name: "Sales Invoice" },
+        { name: "Paid Sales List" },
+        { name: "Unpaid Sales List" },
+        { name: "Loans" },
+        { name: "Sales Return" },
+        { name: "Recovery Entry" },
       ]},
       { icon: BookUser, name: "Ledgers & Profiles", children: [
-        { name: "Customers" }, { name: "Suppliers" }, { name: "Account Groups" },
-      ]},
-      { icon: BookOpenText, name: "Finance Book", children: [
-        { name: "Cash Book" }, { name: "Bank Book" }, { name: "Expenses" }, { name: "Journal Entries" },
+        { name: "All Ledgers List" },
+        { name: "Customer Ledgers" },
+        { name: "Supplier Ledgers" },
+        { name: "Employee Ledgers" },
+        { name: "Sales Man Ledgers" },
+        { name: "Expenses Ledgers" },
+        { name: "General Ledgers" },
+        { name: "Bank Accounts" },
+        { name: "Cash & Bank Balances" },
       ]},
     ],
   },
@@ -54,16 +71,21 @@ export const nav: { label: string; items: NavItem[] }[] = [
     label: "Operations",
     items: [
       { icon: Users, name: "Personnel & HR", children: [
-        { name: "Employees" }, { name: "Attendance" }, { name: "Payroll" },
+        { name: "Ledger Statements" },
+        { name: "Advance & Loans" },
+        { name: "Salary Payouts" },
+      ]},
+      { icon: BookOpenText, name: "Finance Book", children: [
+        { name: "Cash Book" },
+        { name: "Bank Book" },
+        { name: "Income Entry" },
+        { name: "Expense Entry" },
       ]},
       { icon: BarChart3, name: "Reports Hub", children: [
-        { name: "Sales Reports" }, { name: "Purchase Reports" }, { name: "Inventory Reports" }, { name: "Profit & Loss" },
-      ]},
-      { icon: AlertTriangle, name: "Low Stock", badge: 6, children: [
-        { name: "Reorder List", badge: 6 }, { name: "Out of Stock" }, { name: "Reorder Rules" },
-      ]},
-      { icon: Settings, name: "Shop Settings", children: [
-        { name: "Profile" }, { name: "Users & Roles" }, { name: "Preferences" }, { name: "Backups" },
+        { name: "Product Report" },
+        { name: "Stock Report" },
+        { name: "Purchase Report" },
+        { name: "Sales Report" },
       ]},
     ],
   },
