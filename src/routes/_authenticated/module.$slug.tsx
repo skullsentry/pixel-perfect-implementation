@@ -420,10 +420,14 @@ function Row({ label, value }: { label: string; value: string }) {
 
 // ---------------- LEDGER VIEW ----------------
 
+type LedgerRow = { id: string; date: string; ref: string; desc: string; debit: number; credit: number; balance: number };
+
 function LedgerView({ mod }: { mod: ModuleDef }) {
-  const entries = useMemo(() => buildLedger(mod), [mod]);
+  const [entries, setEntries] = useState<LedgerRow[]>(() => buildLedger(mod));
   const [q, setQ] = useState("");
   const [tab, setTab] = useState("all");
+  const [openNew, setOpenNew] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const filtered = entries.filter((e) => {
     const okQ = q.trim() === "" || `${e.desc} ${e.ref}`.toLowerCase().includes(q.toLowerCase());
@@ -435,10 +439,21 @@ function LedgerView({ mod }: { mod: ModuleDef }) {
   const totalCredit = entries.reduce((a, b) => a + b.credit, 0);
   const balance = totalDebit - totalCredit;
 
+  const addEntry = (row: { date: string; ref: string; desc: string; debit: number; credit: number }) => {
+    setEntries((prev) => {
+      const prevBal = prev.length ? prev[prev.length - 1].balance : 0;
+      const newBal = prevBal + row.debit - row.credit;
+      return [...prev, { id: `${mod.slug}-le-${Date.now()}`, ...row, balance: newBal }];
+    });
+    setOpenNew(false);
+    setToast("Journal entry posted");
+    setTimeout(() => setToast(null), 2200);
+  };
+
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="New Entry" onPrimary={() => alert("New journal entry — coming soon")} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="New Entry" onPrimary={() => setOpenNew(true)} />} />
       <KpiStrip items={[
         { label: "Total Debit", value: money(totalDebit), sub: "This period", icon: ArrowUpRight, grad: "var(--gradient-mint)", tone: "up" },
         { label: "Total Credit", value: money(totalCredit), sub: "This period", icon: ArrowDownRight, grad: "var(--gradient-sunset)", tone: "down" },
@@ -486,11 +501,68 @@ function LedgerView({ mod }: { mod: ModuleDef }) {
           </table>
         </div>
       </section>
+
+      {openNew && <LedgerEntryModal mod={mod} grad={mod.grad} onClose={() => setOpenNew(false)} onSave={addEntry} />}
+      {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
 
-function buildLedger(mod: ModuleDef) {
+function LedgerEntryModal({ mod, grad, onClose, onSave }: { mod: ModuleDef; grad: string; onClose: () => void; onSave: (r: { date: string; ref: string; desc: string; debit: number; credit: number }) => void }) {
+  const [form, setForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    ref: `${mod.slug.slice(0, 2).toUpperCase()}-${String(Math.floor(4000 + Math.random() * 900))}`,
+    desc: "",
+    kind: "debit" as "debit" | "credit",
+    amount: 0,
+  });
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.desc.trim() || form.amount <= 0) return;
+    onSave({
+      date: form.date, ref: form.ref, desc: form.desc,
+      debit: form.kind === "debit" ? form.amount : 0,
+      credit: form.kind === "credit" ? form.amount : 0,
+    });
+  };
+  return (
+    <ModalShell title="New Journal Entry" grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button type="submit" form="ledger-form" className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Save size={15} /> Post Entry
+          </button>
+        </>
+      }>
+      <form id="ledger-form" onSubmit={submit} className="grid grid-cols-2 gap-3">
+        <Field label="Date"><input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" /></Field>
+        <Field label="Reference"><input value={form.ref} onChange={(e) => setForm({ ...form, ref: e.target.value })} className="input" /></Field>
+        <Field label="Description" full><input value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} placeholder="Bank deposit, payment received…" className="input" required /></Field>
+        <Field label="Type">
+          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as "debit" | "credit" })} className="input">
+            <option value="debit">Debit</option>
+            <option value="credit">Credit</option>
+          </select>
+        </Field>
+        <Field label="Amount (Rs)"><input type="number" min={0} value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="input" required /></Field>
+      </form>
+    </ModalShell>
+  );
+}
+
+function Toast({ message, grad }: { message: string; grad: string }) {
+  return (
+    <div className="fixed bottom-6 right-6 z-[60] glass-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-[var(--shadow-glow)]">
+      <div className="h-8 w-8 rounded-lg grid place-items-center text-primary-foreground" style={{ background: grad }}>
+        <CheckCircle2 size={15} />
+      </div>
+      <span className="text-sm font-semibold">{message}</span>
+    </div>
+  );
+}
+
+function buildLedger(mod: ModuleDef): LedgerRow[] {
   const rand = seedRand(mod.slug + "-l");
   const descs = mod.features.concat(["Opening balance", "Bank deposit", "Cash withdrawal", "Adjustment entry"]);
   const prefix = mod.slug.slice(0, 2).toUpperCase();
@@ -517,6 +589,8 @@ function ReportView({ mod }: { mod: ModuleDef }) {
   const rows = useMemo(() => buildReport(mod), [mod]);
   const [tab, setTab] = useState("monthly");
   const trend = useMemo(() => buildTrend(mod), [mod]);
+  const [openGen, setOpenGen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const totalRevenue = rows.reduce((a, b) => a + b.revenue, 0);
   const totalUnits = rows.reduce((a, b) => a + b.units, 0);
@@ -526,7 +600,7 @@ function ReportView({ mod }: { mod: ModuleDef }) {
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Generate Report" onPrimary={() => window.print()} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Generate Report" onPrimary={() => setOpenGen(true)} />} />
       <KpiStrip items={[
         { label: "Revenue", value: money(totalRevenue), sub: "This period", icon: TrendingUp, grad: mod.grad, tone: "up" },
         { label: "Units Moved", value: fmt(totalUnits), sub: `${rows.length} items`, icon: BarChart3, grad: "var(--gradient-accent)" },
@@ -594,9 +668,56 @@ function ReportView({ mod }: { mod: ModuleDef }) {
           </table>
         </div>
       </section>
+
+      {openGen && (
+        <ReportGenerateModal grad={mod.grad} onClose={() => setOpenGen(false)}
+          onGenerate={(opt) => {
+            setOpenGen(false);
+            setToast(`Report generated · ${opt.format.toUpperCase()} · ${opt.range}`);
+            setTimeout(() => setToast(null), 2400);
+            if (opt.format === "print") setTimeout(() => window.print(), 300);
+          }} />
+      )}
+      {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
+
+function ReportGenerateModal({ grad, onClose, onGenerate }: { grad: string; onClose: () => void; onGenerate: (opt: { range: string; format: string }) => void }) {
+  const [range, setRange] = useState("This month");
+  const [format, setFormat] = useState("pdf");
+  return (
+    <ModalShell title="Generate Report" grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button onClick={() => onGenerate({ range, format })} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Sparkles size={15} /> Generate
+          </button>
+        </>
+      }>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Date Range" full>
+          <select value={range} onChange={(e) => setRange(e.target.value)} className="input">
+            <option>Today</option><option>This week</option><option>This month</option><option>Last month</option><option>This quarter</option><option>This year</option>
+          </select>
+        </Field>
+        <Field label="Format" full>
+          <div className="grid grid-cols-3 gap-2">
+            {[{ k: "pdf", l: "PDF" }, { k: "excel", l: "Excel" }, { k: "print", l: "Print" }].map((f) => (
+              <button key={f.k} type="button" onClick={() => setFormat(f.k)}
+                className={`h-10 rounded-xl border text-xs font-semibold transition ${format === f.k ? "text-primary-foreground border-transparent shadow-[var(--shadow-md)]" : "border-border text-muted-foreground hover:text-foreground"}`}
+                style={format === f.k ? { background: grad } : undefined}>
+                {f.l}
+              </button>
+            ))}
+          </div>
+        </Field>
+      </div>
+    </ModalShell>
+  );
+}
+
 
 function BarChart({ data, grad }: { data: { label: string; value: number }[]; grad: string }) {
   const max = Math.max(...data.map((d) => d.value), 1);
@@ -649,27 +770,52 @@ function FormView({ mod }: { mod: ModuleDef }) {
     { id: 1, name: "", qty: 1, price: 0 },
     { id: 2, name: "", qty: 1, price: 0 },
   ]);
+  const [meta, setMeta] = useState({
+    ref: "AUTO-2026-0142",
+    date: "2026-07-15",
+    party: "",
+    warehouse: "WH-01 Karachi",
+    payment: "Cash",
+    notes: "",
+  });
+  const [toast, setToast] = useState<string | null>(null);
   const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + tax;
 
+  const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2200); };
+  const save = (kind: "saved" | "draft" | "print") => {
+    if (!meta.party.trim()) { flash("Select a party first"); return; }
+    if (items.every(i => !i.name.trim())) { flash("Add at least one line item"); return; }
+    if (kind === "saved") flash(`Entry saved · ${meta.ref} · ${money(total)}`);
+    if (kind === "draft") flash(`Draft saved · ${meta.ref}`);
+    if (kind === "print") { flash("Preparing print…"); setTimeout(() => window.print(), 300); }
+  };
+
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Entry" onPrimary={() => alert(`Saved. Total: Rs ${total.toLocaleString()}`)} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Entry" onPrimary={() => save("saved")} />} />
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Main form */}
       <div className="lg:col-span-2 space-y-4">
         <section className="glass-card rounded-2xl p-5 md:p-6">
           <h3 className="text-sm font-bold mb-4">Entry Details</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Reference No"><input defaultValue="AUTO-2026-0142" className="input" /></Field>
-            <Field label="Date"><input type="date" defaultValue="2026-07-15" className="input" /></Field>
+            <Field label="Reference No"><input value={meta.ref} onChange={(e) => setMeta({ ...meta, ref: e.target.value })} className="input" /></Field>
+            <Field label="Date"><input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} className="input" /></Field>
             <Field label="Party / Customer" full>
-              <select className="input"><option>Select party…</option><option>Al Karim Traders</option><option>Bismillah Suppliers</option><option>Faisal Foods</option></select>
+              <select value={meta.party} onChange={(e) => setMeta({ ...meta, party: e.target.value })} className="input">
+                <option value="">Select party…</option>
+                <option>Al Karim Traders</option><option>Bismillah Suppliers</option><option>Faisal Foods</option>
+              </select>
             </Field>
-            <Field label="Warehouse"><select className="input"><option>WH-01 Karachi</option><option>WH-02 Lahore</option></select></Field>
-            <Field label="Payment Mode"><select className="input"><option>Cash</option><option>Bank Transfer</option><option>Credit</option><option>Split</option></select></Field>
+            <Field label="Warehouse">
+              <select value={meta.warehouse} onChange={(e) => setMeta({ ...meta, warehouse: e.target.value })} className="input"><option>WH-01 Karachi</option><option>WH-02 Lahore</option></select>
+            </Field>
+            <Field label="Payment Mode">
+              <select value={meta.payment} onChange={(e) => setMeta({ ...meta, payment: e.target.value })} className="input"><option>Cash</option><option>Bank Transfer</option><option>Credit</option><option>Split</option></select>
+            </Field>
           </div>
         </section>
 
@@ -712,7 +858,7 @@ function FormView({ mod }: { mod: ModuleDef }) {
 
         <section className="glass-card rounded-2xl p-5 md:p-6">
           <h3 className="text-sm font-bold mb-3">Notes</h3>
-          <textarea rows={3} placeholder="Optional notes, terms, or internal reference…" className="input min-h-[80px] py-2 resize-none" />
+          <textarea rows={3} value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} placeholder="Optional notes, terms, or internal reference…" className="input min-h-[80px] py-2 resize-none" />
         </section>
       </div>
 
@@ -731,19 +877,20 @@ function FormView({ mod }: { mod: ModuleDef }) {
             </div>
           </div>
           <div className="mt-5 space-y-2">
-            <button className="w-full h-11 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
+            <button onClick={() => { save("saved"); setTimeout(() => window.print(), 400); }} className="w-full h-11 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
               <CheckCircle2 size={15} /> Save & Print
             </button>
-            <button className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
+            <button onClick={() => save("print")} className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
               <Printer size={15} /> Print Preview
             </button>
-            <button className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
+            <button onClick={() => save("draft")} className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
               <Send size={15} /> Save as Draft
             </button>
           </div>
         </section>
       </aside>
     </div>
+    {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
@@ -752,6 +899,8 @@ function FormView({ mod }: { mod: ModuleDef }) {
 
 function SettingsView({ mod }: { mod: ModuleDef }) {
   const [tab, setTab] = useState("business");
+  const [toast, setToast] = useState<string | null>(null);
+  const saveChanges = () => { setToast("Settings saved"); setTimeout(() => setToast(null), 2200); };
   const tabs = [
     { key: "business", label: "Business" },
     { key: "invoice", label: "Invoice" },
@@ -761,7 +910,7 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Changes" onPrimary={() => alert("Settings saved")} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Changes" onPrimary={saveChanges} />} />
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
       <aside className="glass-card rounded-2xl p-3 h-fit">
         {tabs.map((t) => (
@@ -828,14 +977,15 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
           </>
         )}
         <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
-          <button className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
-          <button className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
+          <button onClick={() => setTab("business")} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button onClick={saveChanges} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
             <CheckCircle2 size={15} /> Save Changes
           </button>
         </div>
       </section>
       <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:12px;border:1px solid hsl(var(--border));background:oklch(1 0 0 / 0.02);font-size:13px;outline:none;color:inherit;transition:border-color .15s}.input:focus{border-color:oklch(0.7 0.19 285 / 0.7)}`}</style>
     </div>
+    {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
