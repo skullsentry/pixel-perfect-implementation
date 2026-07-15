@@ -155,10 +155,18 @@ const STATUS_META: Record<string, { label: string; cls: string; icon: typeof Che
   completed: { label: "Completed",  cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25", icon: CheckCircle2 },
 };
 
+type ListRow = {
+  id: string; ref: string; party: string; initials: string; date: string;
+  note: string; amount: number; status: string;
+};
+
 function ListView({ mod }: { mod: ModuleDef }) {
-  const rows = useMemo(() => buildListRows(mod), [mod]);
+  const [rows, setRows] = useState<ListRow[]>(() => buildListRows(mod));
   const [q, setQ] = useState("");
   const [tab, setTab] = useState("all");
+  const [editing, setEditing] = useState<ListRow | null>(null);
+  const [viewing, setViewing] = useState<ListRow | null>(null);
+  const [openNew, setOpenNew] = useState(false);
 
   const tabs = [
     { key: "all", label: "All" },
@@ -178,8 +186,16 @@ function ListView({ mod }: { mod: ModuleDef }) {
   const pending = rows.filter(r => r.status === "pending").reduce((a, b) => a + b.amount, 0);
   const overdue = rows.filter(r => r.status === "overdue").reduce((a, b) => a + b.amount, 0);
 
+  const upsert = (row: ListRow) => {
+    setRows((prev) => prev.some(r => r.id === row.id) ? prev.map(r => r.id === row.id ? row : r) : [row, ...prev]);
+  };
+  const remove = (id: string) => setRows((prev) => prev.filter(r => r.id !== id));
+
   return (
     <>
+      <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
+        actions={<HeaderActions grad={mod.grad} primaryLabel="New Record" onPrimary={() => setOpenNew(true)} />} />
+
       <KpiStrip items={[
         { label: "Total Records", value: fmt(rows.length), sub: "This month", icon: FileText, grad: mod.grad },
         { label: "Total Value", value: money(total), sub: "All entries", icon: TrendingUp, grad: "var(--gradient-accent)" },
@@ -228,9 +244,9 @@ function ListView({ mod }: { mod: ModuleDef }) {
                     </td>
                     <td className="py-4 px-5">
                       <div className="flex items-center justify-end gap-1">
-                        <IconBtn label="View"><Eye size={14} /></IconBtn>
-                        <IconBtn label="Edit"><Pencil size={14} /></IconBtn>
-                        <IconBtn label="More"><MoreHorizontal size={14} /></IconBtn>
+                        <IconBtn label="View" onClick={() => setViewing(r)}><Eye size={14} /></IconBtn>
+                        <IconBtn label="Edit" onClick={() => setEditing(r)}><Pencil size={14} /></IconBtn>
+                        <IconBtn label="Delete" onClick={() => { if (confirm(`Delete ${r.ref}?`)) remove(r.id); }}><Trash2 size={14} /></IconBtn>
                       </div>
                     </td>
                   </tr>
@@ -252,11 +268,31 @@ function ListView({ mod }: { mod: ModuleDef }) {
           </div>
         </div>
       </section>
+
+      {openNew && (
+        <RecordFormModal
+          title={`New — ${mod.title}`} grad={mod.grad}
+          initial={{ id: crypto.randomUUID(), ref: `${mod.slug.slice(0,2).toUpperCase()}-2026-${String(Math.floor(1000 + Math.random()*8999))}`, party: "", initials: "", date: new Date().toISOString().slice(0,10), note: "", amount: 0, status: "pending" }}
+          onClose={() => setOpenNew(false)}
+          onSave={(r) => { upsert({ ...r, initials: r.party.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase() || "??" }); setOpenNew(false); }}
+        />
+      )}
+      {editing && (
+        <RecordFormModal
+          title={`Edit — ${editing.ref}`} grad={mod.grad} initial={editing}
+          onClose={() => setEditing(null)}
+          onSave={(r) => { upsert({ ...r, initials: r.party.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase() || "??" }); setEditing(null); }}
+        />
+      )}
+      {viewing && (
+        <RecordViewModal record={viewing} grad={mod.grad} onClose={() => setViewing(null)}
+          onEdit={() => { setEditing(viewing); setViewing(null); }} />
+      )}
     </>
   );
 }
 
-function buildListRows(mod: ModuleDef) {
+function buildListRows(mod: ModuleDef): ListRow[] {
   const rand = seedRand(mod.slug);
   const parties = ["Al Karim Traders", "Bismillah Suppliers", "Faisal Foods", "Ghazi Distributors", "Hamza Enterprises", "Iqbal Cash & Carry", "Junaid Wholesale", "Karim Sons", "Lahori Foods", "Mustafa Traders"];
   const statuses = ["paid", "pending", "overdue", "paid", "pending", "completed", "paid", "pending", "overdue", "paid"];
@@ -268,14 +304,118 @@ function buildListRows(mod: ModuleDef) {
     return {
       id: `${mod.slug}-${i}`,
       ref: `${prefix}-2026-${String(2100 + Math.floor(rand() * 800)).padStart(4, "0")}`,
-      party,
-      initials,
+      party, initials,
       date: `2026-07-${String(1 + Math.floor(rand() * 14)).padStart(2, "0")}`,
       note: notes[i % notes.length],
       amount: Math.round(1000 + rand() * 499000),
       status: statuses[i % statuses.length],
     };
   });
+}
+
+// ---------------- Record Modals (shared by List & Ledger) ----------------
+
+function ModalShell({ title, onClose, grad, children, footer }: { title: string; onClose: () => void; grad: string; children: ReactNode; footer?: ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-background/70 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg glass-card rounded-3xl p-6 md:p-7 relative">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-40" style={{ background: grad }} />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <h3 className="text-lg font-bold">{title}</h3>
+            <button type="button" onClick={onClose} aria-label="Close" className="h-8 w-8 grid place-items-center rounded-lg border border-border bg-background/40 text-muted-foreground hover:text-foreground">
+              <X size={15} />
+            </button>
+          </div>
+          {children}
+          {footer && <div className="mt-6 flex items-center justify-end gap-2">{footer}</div>}
+        </div>
+        <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:12px;border:1px solid hsl(var(--border));background:oklch(1 0 0 / 0.02);font-size:13px;outline:none;color:inherit;transition:border-color .15s}.input:focus{border-color:oklch(0.7 0.19 285 / 0.7)}`}</style>
+      </div>
+    </div>
+  );
+}
+
+function RecordFormModal({ title, initial, grad, onClose, onSave }: {
+  title: string; initial: ListRow; grad: string; onClose: () => void; onSave: (r: ListRow) => void;
+}) {
+  const [form, setForm] = useState<ListRow>(initial);
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.party.trim()) return;
+    onSave(form);
+  };
+  return (
+    <ModalShell title={title} grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button type="submit" form="record-form" className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Save size={15} /> Save Record
+          </button>
+        </>
+      }>
+      <form id="record-form" onSubmit={submit} className="grid grid-cols-2 gap-3">
+        <Field label="Reference"><input value={form.ref} onChange={(e) => setForm({ ...form, ref: e.target.value })} className="input" /></Field>
+        <Field label="Date"><input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" /></Field>
+        <Field label="Party / Customer" full><input value={form.party} onChange={(e) => setForm({ ...form, party: e.target.value })} placeholder="Al Karim Traders" className="input" required /></Field>
+        <Field label="Note" full><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Short description" className="input" /></Field>
+        <Field label="Amount (Rs)"><input type="number" min={0} value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="input" /></Field>
+        <Field label="Status">
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="input">
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+            <option value="completed">Completed</option>
+            <option value="draft">Draft</option>
+          </select>
+        </Field>
+      </form>
+    </ModalShell>
+  );
+}
+
+function RecordViewModal({ record, grad, onClose, onEdit }: { record: ListRow; grad: string; onClose: () => void; onEdit: () => void }) {
+  const s = STATUS_META[record.status] ?? STATUS_META.pending;
+  const S = s.icon;
+  return (
+    <ModalShell title={record.ref} grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Close</button>
+          <button onClick={onEdit} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Pencil size={15} /> Edit Record
+          </button>
+        </>
+      }>
+      <div className="space-y-3 text-sm">
+        <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+          <div className="h-12 w-12 rounded-2xl grid place-items-center text-primary-foreground shadow-[var(--shadow-md)]" style={{ background: "var(--gradient-accent)" }}>
+            {record.initials || "??"}
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold">{record.party}</p>
+            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5"><Calendar size={11} /> {record.date}</p>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${s.cls}`}>
+            <S size={11} /> {s.label}
+          </span>
+        </div>
+        <Row label="Amount" value={money(record.amount)} />
+        <Row label="Reference" value={record.ref} />
+        <Row label="Note" value={record.note || "—"} />
+      </div>
+    </ModalShell>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">{label}</span>
+      <span className="text-sm font-semibold">{value}</span>
+    </div>
+  );
 }
 
 // ---------------- LEDGER VIEW ----------------
