@@ -899,6 +899,8 @@ function FormView({ mod }: { mod: ModuleDef }) {
 
 function SettingsView({ mod }: { mod: ModuleDef }) {
   const [tab, setTab] = useState("business");
+  const [toast, setToast] = useState<string | null>(null);
+  const saveChanges = () => { setToast("Settings saved"); setTimeout(() => setToast(null), 2200); };
   const tabs = [
     { key: "business", label: "Business" },
     { key: "invoice", label: "Invoice" },
@@ -908,7 +910,7 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Changes" onPrimary={() => alert("Settings saved")} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Changes" onPrimary={saveChanges} />} />
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
       <aside className="glass-card rounded-2xl p-3 h-fit">
         {tabs.map((t) => (
