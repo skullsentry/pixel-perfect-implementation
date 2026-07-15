@@ -62,14 +62,6 @@ function ModulePage() {
       title={mod.title}
       crumb={<>Insaf Trading Company › {mod.section} › <span className="text-foreground font-semibold">{mod.title}</span></>}
     >
-      <PageHeader
-        title={mod.title}
-        subtitle={mod.description}
-        icon={mod.icon}
-        grad={mod.grad}
-        actions={<PageActions kind={kind} grad={mod.grad} />}
-      />
-
       {kind === "list" && <ListView mod={mod} />}
       {kind === "ledger" && <LedgerView mod={mod} />}
       {kind === "report" && <ReportView mod={mod} />}
@@ -79,19 +71,14 @@ function ModulePage() {
   );
 }
 
-function PageActions({ kind, grad }: { kind: Kind; grad: string }) {
-  const primary =
-    kind === "form" ? "Save Entry" :
-    kind === "settings" ? "Save Changes" :
-    kind === "report" ? "Generate Report" :
-    "New Record";
+function HeaderActions({ grad, primaryLabel, onPrimary }: { grad: string; primaryLabel: string; onPrimary: () => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button className="h-10 px-4 rounded-xl border border-border bg-card/60 text-sm font-medium hover:border-primary/50 transition inline-flex items-center gap-2">
         <Download size={15} /> Export
       </button>
-      <button className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95 transition inline-flex items-center gap-2" style={{ background: grad }}>
-        <Plus size={15} /> {primary}
+      <button onClick={onPrimary} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95 transition inline-flex items-center gap-2" style={{ background: grad }}>
+        <Plus size={15} /> {primaryLabel}
       </button>
     </div>
   );
