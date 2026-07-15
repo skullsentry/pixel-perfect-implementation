@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWarehouseListRouteImport } from './routes/_authenticated/warehouse-list'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -33,6 +34,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWarehouseListRoute =
+  AuthenticatedWarehouseListRouteImport.update({
+    id: '/warehouse-list',
+    path: '/warehouse-list',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUnitsRoute = AuthenticatedUnitsRouteImport.update({
   id: '/units',
   path: '/units',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/module/$slug': typeof AuthenticatedModuleSlugRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/module/$slug': typeof AuthenticatedModuleSlugRoute
 }
 export interface FileRoutesById {
@@ -94,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
+  '/_authenticated/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/_authenticated/module/$slug': typeof AuthenticatedModuleSlugRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/products'
     | '/units'
+    | '/warehouse-list'
     | '/module/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/products'
     | '/units'
+    | '/warehouse-list'
     | '/module/$slug'
   id:
     | '__root__'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/products'
     | '/_authenticated/units'
+    | '/_authenticated/warehouse-list'
     | '/_authenticated/module/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/warehouse-list': {
+      id: '/_authenticated/warehouse-list'
+      path: '/warehouse-list'
+      fullPath: '/warehouse-list'
+      preLoaderRoute: typeof AuthenticatedWarehouseListRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/units': {
       id: '/_authenticated/units'
@@ -210,6 +230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
+  AuthenticatedWarehouseListRoute: typeof AuthenticatedWarehouseListRoute
   AuthenticatedModuleSlugRoute: typeof AuthenticatedModuleSlugRoute
 }
 
@@ -219,6 +240,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
+  AuthenticatedWarehouseListRoute: AuthenticatedWarehouseListRoute,
   AuthenticatedModuleSlugRoute: AuthenticatedModuleSlugRoute,
 }
 
