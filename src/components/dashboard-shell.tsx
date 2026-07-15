@@ -137,25 +137,38 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
                 const Icon = it.icon;
                 const isOpen = openMenu === it.name;
                 const hasActiveChild = it.children?.some((c) => c.to === pathname);
-                const isActive = isOpen || hasActiveChild;
+                const isSelfActive = it.to === pathname;
+                const isActive = isOpen || hasActiveChild || isSelfActive;
+                const topCls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                  isActive ? "text-foreground shadow-[var(--shadow-md)]" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60"
+                }`;
+                const topStyle = isActive ? { background: "linear-gradient(135deg, oklch(0.7 0.19 285 / 0.22), oklch(0.72 0.18 320 / 0.12))", borderLeft: "2px solid oklch(0.7 0.19 285)" } : undefined;
+                const topInner = (
+                  <>
+                    <Icon size={17} className={isActive ? "text-primary-glow" : ""} />
+                    <span className="flex-1 text-left">{it.name}</span>
+                    {it.badge ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "var(--gradient-sunset)" }}>{it.badge}</span>
+                    ) : it.children ? (
+                      <ChevronRight size={14} className={`opacity-40 group-hover:opacity-80 transition-transform ${isOpen ? "rotate-90 opacity-90" : ""}`} />
+                    ) : null}
+                  </>
+                );
                 return (
                   <div key={it.name} className="mb-1">
-                    <button
-                      onClick={() => setOpenMenu(isOpen ? null : it.name)}
-                      aria-expanded={isOpen}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                        isActive ? "text-foreground shadow-[var(--shadow-md)]" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60"
-                      }`}
-                      style={isActive ? { background: "linear-gradient(135deg, oklch(0.7 0.19 285 / 0.22), oklch(0.72 0.18 320 / 0.12))", borderLeft: "2px solid oklch(0.7 0.19 285)" } : undefined}
-                    >
-                      <Icon size={17} className={isActive ? "text-primary-glow" : ""} />
-                      <span className="flex-1 text-left">{it.name}</span>
-                      {it.badge ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "var(--gradient-sunset)" }}>{it.badge}</span>
-                      ) : (
-                        <ChevronRight size={14} className={`opacity-40 group-hover:opacity-80 transition-transform ${isOpen ? "rotate-90 opacity-90" : ""}`} />
-                      )}
-                    </button>
+                    {it.children ? (
+                      <button onClick={() => setOpenMenu(isOpen ? null : it.name)} aria-expanded={isOpen} className={topCls} style={topStyle}>
+                        {topInner}
+                      </button>
+                    ) : it.to ? (
+                      <Link to={it.to} onClick={onClose} className={topCls} style={topStyle}>
+                        {topInner}
+                      </Link>
+                    ) : (
+                      <button onClick={onClose} className={topCls} style={topStyle}>
+                        {topInner}
+                      </button>
+                    )}
                     {it.children && (
                       <div className="grid transition-all duration-300 ease-out"
                         style={{ gridTemplateRows: isOpen ? "1fr" : "0fr", opacity: isOpen ? 1 : 0 }}>
