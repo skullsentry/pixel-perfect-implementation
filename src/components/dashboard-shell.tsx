@@ -100,6 +100,14 @@ function findParent(pathname: string): string | null {
 }
 
 function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const signOut = async () => {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const initialParent = findParent(pathname) ?? "Product Setup";
   const [openMenu, setOpenMenu] = useState<string | null>(initialParent);
