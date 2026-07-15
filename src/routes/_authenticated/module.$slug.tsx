@@ -53,7 +53,7 @@ function ModulePage() {
       <section>
         <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase mb-4">What this module will do</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mod.features.map((f, i) => (
+          {mod.features.map((f: string, i: number) => (
             <div key={f} className="glass-card hover-lift p-5 flex items-start gap-3">
               <div className="h-9 w-9 rounded-xl grid place-items-center shrink-0" style={{ background: mod.grad }}>
                 <Check size={16} className="text-white" />
