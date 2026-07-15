@@ -830,7 +830,7 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
 
 // ---------------- Shared bits ----------------
 
-function IconBtn({ children, label }: { children: ReactNode; label: string }) {
+function IconBtn({ children, label, onClick }: { children: ReactNode; label: string; onClick?: () => void }) {
   return (
     <button aria-label={label} className="h-8 w-8 grid place-items-center rounded-lg border border-border bg-background/40 text-muted-foreground hover:text-foreground hover:border-primary/50 transition">
       {children}
