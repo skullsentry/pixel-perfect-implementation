@@ -29,7 +29,7 @@ export const nav: { label: string; items: NavItem[] }[] = [
         { name: "Units of Measure", to: "/units" },
       ]},
       { icon: Warehouse, name: "Warehouses", children: [
-        { name: "Warehouse List", to: "/module/warehouse-list" },
+        { name: "Warehouse List", to: "/warehouse-list" },
         { name: "Stock Transfer", to: "/module/stock-transfer" },
         { name: "Stock Adjustment", to: "/module/stock-adjustment" },
         { name: "Low Stock Alerts", to: "/module/low-stock-alerts" },
