@@ -14,7 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWarehouseListRouteImport } from './routes/_authenticated/warehouse-list'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
+import { Route as AuthenticatedStockTransferRouteImport } from './routes/_authenticated/stock-transfer'
+import { Route as AuthenticatedStockAdjustmentRouteImport } from './routes/_authenticated/stock-adjustment'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedLowStockAlertsRouteImport } from './routes/_authenticated/low-stock-alerts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
@@ -45,11 +48,29 @@ const AuthenticatedUnitsRoute = AuthenticatedUnitsRouteImport.update({
   path: '/units',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStockTransferRoute =
+  AuthenticatedStockTransferRouteImport.update({
+    id: '/stock-transfer',
+    path: '/stock-transfer',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStockAdjustmentRoute =
+  AuthenticatedStockAdjustmentRouteImport.update({
+    id: '/stock-adjustment',
+    path: '/stock-adjustment',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
   path: '/products',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLowStockAlertsRoute =
+  AuthenticatedLowStockAlertsRouteImport.update({
+    id: '/low-stock-alerts',
+    path: '/low-stock-alerts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -77,7 +98,10 @@ export interface FileRoutesByFullPath {
   '/brands': typeof AuthenticatedBrandsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/low-stock-alerts': typeof AuthenticatedLowStockAlertsRoute
   '/products': typeof AuthenticatedProductsRoute
+  '/stock-adjustment': typeof AuthenticatedStockAdjustmentRoute
+  '/stock-transfer': typeof AuthenticatedStockTransferRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/module/$slug': typeof AuthenticatedModuleSlugRoute
@@ -88,7 +112,10 @@ export interface FileRoutesByTo {
   '/brands': typeof AuthenticatedBrandsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/low-stock-alerts': typeof AuthenticatedLowStockAlertsRoute
   '/products': typeof AuthenticatedProductsRoute
+  '/stock-adjustment': typeof AuthenticatedStockAdjustmentRoute
+  '/stock-transfer': typeof AuthenticatedStockTransferRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/module/$slug': typeof AuthenticatedModuleSlugRoute
@@ -101,7 +128,10 @@ export interface FileRoutesById {
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/low-stock-alerts': typeof AuthenticatedLowStockAlertsRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/stock-adjustment': typeof AuthenticatedStockAdjustmentRoute
+  '/_authenticated/stock-transfer': typeof AuthenticatedStockTransferRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/warehouse-list': typeof AuthenticatedWarehouseListRoute
   '/_authenticated/module/$slug': typeof AuthenticatedModuleSlugRoute
@@ -114,7 +144,10 @@ export interface FileRouteTypes {
     | '/brands'
     | '/categories'
     | '/dashboard'
+    | '/low-stock-alerts'
     | '/products'
+    | '/stock-adjustment'
+    | '/stock-transfer'
     | '/units'
     | '/warehouse-list'
     | '/module/$slug'
@@ -125,7 +158,10 @@ export interface FileRouteTypes {
     | '/brands'
     | '/categories'
     | '/dashboard'
+    | '/low-stock-alerts'
     | '/products'
+    | '/stock-adjustment'
+    | '/stock-transfer'
     | '/units'
     | '/warehouse-list'
     | '/module/$slug'
@@ -137,7 +173,10 @@ export interface FileRouteTypes {
     | '/_authenticated/brands'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
+    | '/_authenticated/low-stock-alerts'
     | '/_authenticated/products'
+    | '/_authenticated/stock-adjustment'
+    | '/_authenticated/stock-transfer'
     | '/_authenticated/units'
     | '/_authenticated/warehouse-list'
     | '/_authenticated/module/$slug'
@@ -186,11 +225,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUnitsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stock-transfer': {
+      id: '/_authenticated/stock-transfer'
+      path: '/stock-transfer'
+      fullPath: '/stock-transfer'
+      preLoaderRoute: typeof AuthenticatedStockTransferRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stock-adjustment': {
+      id: '/_authenticated/stock-adjustment'
+      path: '/stock-adjustment'
+      fullPath: '/stock-adjustment'
+      preLoaderRoute: typeof AuthenticatedStockAdjustmentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products': {
       id: '/_authenticated/products'
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/low-stock-alerts': {
+      id: '/_authenticated/low-stock-alerts'
+      path: '/low-stock-alerts'
+      fullPath: '/low-stock-alerts'
+      preLoaderRoute: typeof AuthenticatedLowStockAlertsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -228,7 +288,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedLowStockAlertsRoute: typeof AuthenticatedLowStockAlertsRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedStockAdjustmentRoute: typeof AuthenticatedStockAdjustmentRoute
+  AuthenticatedStockTransferRoute: typeof AuthenticatedStockTransferRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedWarehouseListRoute: typeof AuthenticatedWarehouseListRoute
   AuthenticatedModuleSlugRoute: typeof AuthenticatedModuleSlugRoute
@@ -238,7 +301,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedLowStockAlertsRoute: AuthenticatedLowStockAlertsRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedStockAdjustmentRoute: AuthenticatedStockAdjustmentRoute,
+  AuthenticatedStockTransferRoute: AuthenticatedStockTransferRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedWarehouseListRoute: AuthenticatedWarehouseListRoute,
   AuthenticatedModuleSlugRoute: AuthenticatedModuleSlugRoute,
