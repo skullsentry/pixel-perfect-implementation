@@ -14,6 +14,7 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as BrandsRouteImport } from './routes/brands'
+import { Route as IndexRouteImport } from './routes/index'
 
 const UnitsRoute = UnitsRouteImport.update({
   id: '/units',
@@ -40,8 +41,14 @@ const BrandsRoute = BrandsRouteImport.update({
   path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
@@ -49,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/units': typeof UnitsRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
@@ -57,6 +65,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
@@ -65,11 +74,18 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/brands' | '/categories' | '/dashboard' | '/products' | '/units'
+  fullPaths:
+    | '/'
+    | '/brands'
+    | '/categories'
+    | '/dashboard'
+    | '/products'
+    | '/units'
   fileRoutesByTo: FileRoutesByTo
-  to: '/brands' | '/categories' | '/dashboard' | '/products' | '/units'
+  to: '/' | '/brands' | '/categories' | '/dashboard' | '/products' | '/units'
   id:
     | '__root__'
+    | '/'
     | '/brands'
     | '/categories'
     | '/dashboard'
@@ -78,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   BrandsRoute: typeof BrandsRoute
   CategoriesRoute: typeof CategoriesRoute
   DashboardRoute: typeof DashboardRoute
@@ -122,10 +139,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   BrandsRoute: BrandsRoute,
   CategoriesRoute: CategoriesRoute,
   DashboardRoute: DashboardRoute,
@@ -135,3 +160,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
