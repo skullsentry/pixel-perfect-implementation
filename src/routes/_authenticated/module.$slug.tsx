@@ -877,19 +877,20 @@ function FormView({ mod }: { mod: ModuleDef }) {
             </div>
           </div>
           <div className="mt-5 space-y-2">
-            <button className="w-full h-11 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
+            <button onClick={() => { save("saved"); setTimeout(() => window.print(), 400); }} className="w-full h-11 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: mod.grad }}>
               <CheckCircle2 size={15} /> Save & Print
             </button>
-            <button className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
+            <button onClick={() => save("print")} className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
               <Printer size={15} /> Print Preview
             </button>
-            <button className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
+            <button onClick={() => save("draft")} className="w-full h-11 rounded-xl text-sm font-semibold border border-border hover:border-primary/50 transition inline-flex items-center justify-center gap-2">
               <Send size={15} /> Save as Draft
             </button>
           </div>
         </section>
       </aside>
     </div>
+    {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
