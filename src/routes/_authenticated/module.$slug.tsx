@@ -836,6 +836,7 @@ function SettingsView({ mod }: { mod: ModuleDef }) {
       </section>
       <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:12px;border:1px solid hsl(var(--border));background:oklch(1 0 0 / 0.02);font-size:13px;outline:none;color:inherit;transition:border-color .15s}.input:focus{border-color:oklch(0.7 0.19 285 / 0.7)}`}</style>
     </div>
+    </>
   );
 }
 
