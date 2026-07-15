@@ -654,6 +654,9 @@ function FormView({ mod }: { mod: ModuleDef }) {
   const total = subtotal + tax;
 
   return (
+    <>
+      <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Entry" onPrimary={() => alert(`Saved. Total: Rs ${total.toLocaleString()}`)} />} />
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Main form */}
       <div className="lg:col-span-2 space-y-4">
