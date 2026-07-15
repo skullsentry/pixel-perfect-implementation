@@ -770,14 +770,32 @@ function FormView({ mod }: { mod: ModuleDef }) {
     { id: 1, name: "", qty: 1, price: 0 },
     { id: 2, name: "", qty: 1, price: 0 },
   ]);
+  const [meta, setMeta] = useState({
+    ref: "AUTO-2026-0142",
+    date: "2026-07-15",
+    party: "",
+    warehouse: "WH-01 Karachi",
+    payment: "Cash",
+    notes: "",
+  });
+  const [toast, setToast] = useState<string | null>(null);
   const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + tax;
 
+  const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2200); };
+  const save = (kind: "saved" | "draft" | "print") => {
+    if (!meta.party.trim()) { flash("Select a party first"); return; }
+    if (items.every(i => !i.name.trim())) { flash("Add at least one line item"); return; }
+    if (kind === "saved") flash(`Entry saved · ${meta.ref} · ${money(total)}`);
+    if (kind === "draft") flash(`Draft saved · ${meta.ref}`);
+    if (kind === "print") { flash("Preparing print…"); setTimeout(() => window.print(), 300); }
+  };
+
   return (
     <>
       <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
-        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Entry" onPrimary={() => alert(`Saved. Total: Rs ${total.toLocaleString()}`)} />} />
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Save Entry" onPrimary={() => save("saved")} />} />
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Main form */}
       <div className="lg:col-span-2 space-y-4">
