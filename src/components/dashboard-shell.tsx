@@ -19,7 +19,7 @@ export const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "Main",
     items: [
-      { icon: LayoutDashboard, name: "Business Control", to: "/" },
+      { icon: LayoutDashboard, name: "Business Control", to: "/dashboard" },
       { icon: Boxes, name: "Product Setup", children: [
         { name: "Products", to: "/products" },
         { name: "Categories", to: "/categories" },
