@@ -668,9 +668,56 @@ function ReportView({ mod }: { mod: ModuleDef }) {
           </table>
         </div>
       </section>
+
+      {openGen && (
+        <ReportGenerateModal grad={mod.grad} onClose={() => setOpenGen(false)}
+          onGenerate={(opt) => {
+            setOpenGen(false);
+            setToast(`Report generated · ${opt.format.toUpperCase()} · ${opt.range}`);
+            setTimeout(() => setToast(null), 2400);
+            if (opt.format === "print") setTimeout(() => window.print(), 300);
+          }} />
+      )}
+      {toast && <Toast message={toast} grad={mod.grad} />}
     </>
   );
 }
+
+function ReportGenerateModal({ grad, onClose, onGenerate }: { grad: string; onClose: () => void; onGenerate: (opt: { range: string; format: string }) => void }) {
+  const [range, setRange] = useState("This month");
+  const [format, setFormat] = useState("pdf");
+  return (
+    <ModalShell title="Generate Report" grad={grad} onClose={onClose}
+      footer={
+        <>
+          <button onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">Cancel</button>
+          <button onClick={() => onGenerate({ range, format })} className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: grad }}>
+            <Sparkles size={15} /> Generate
+          </button>
+        </>
+      }>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Date Range" full>
+          <select value={range} onChange={(e) => setRange(e.target.value)} className="input">
+            <option>Today</option><option>This week</option><option>This month</option><option>Last month</option><option>This quarter</option><option>This year</option>
+          </select>
+        </Field>
+        <Field label="Format" full>
+          <div className="grid grid-cols-3 gap-2">
+            {[{ k: "pdf", l: "PDF" }, { k: "excel", l: "Excel" }, { k: "print", l: "Print" }].map((f) => (
+              <button key={f.k} type="button" onClick={() => setFormat(f.k)}
+                className={`h-10 rounded-xl border text-xs font-semibold transition ${format === f.k ? "text-primary-foreground border-transparent shadow-[var(--shadow-md)]" : "border-border text-muted-foreground hover:text-foreground"}`}
+                style={format === f.k ? { background: grad } : undefined}>
+                {f.l}
+              </button>
+            ))}
+          </div>
+        </Field>
+      </div>
+    </ModalShell>
+  );
+}
+
 
 function BarChart({ data, grad }: { data: { label: string; value: number }[]; grad: string }) {
   const max = Math.max(...data.map((d) => d.value), 1);
