@@ -3,8 +3,8 @@ import { useMemo, useState } from "react";
 import { DashboardShell, PageHeader } from "@/components/dashboard-shell";
 import {
   Warehouse, Plus, Search, MapPin, Package, TrendingUp, TrendingDown,
-  MoreHorizontal, Filter, Download, Building2, Boxes, AlertTriangle,
-  CheckCircle2, Pencil, Trash2, Eye,
+  MoreHorizontal, Filter, Download, Building2, Boxes,
+  Pencil, Trash2, Eye, X, Check,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/warehouse-list")({
@@ -32,7 +32,7 @@ type Row = {
   trend: number;
 };
 
-const rows: Row[] = [
+const seed: Row[] = [
   { id: "1", code: "WH-01", name: "Main Godown — Karachi", city: "Karachi, PK", manager: "Haji Karim Khan", initials: "HK", capacity: 12000, used: 9420, skus: 1284, value: 8420000, status: "active", trend: 8.2 },
   { id: "2", code: "WH-02", name: "Central Depot — Lahore", city: "Lahore, PK", manager: "Ahmad Raza", initials: "AR", capacity: 8000, used: 5210, skus: 812, value: 4210000, status: "active", trend: 3.4 },
   { id: "3", code: "WH-03", name: "North Storage — Islamabad", city: "Islamabad, PK", manager: "Nasir Ali", initials: "NA", capacity: 6000, used: 5760, skus: 604, value: 3120000, status: "low", trend: -1.6 },
@@ -52,8 +52,10 @@ const statusMeta: Record<Row["status"], { label: string; cls: string; dot: strin
 };
 
 function WarehouseListPage() {
+  const [rows, setRows] = useState<Row[]>(seed);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | Row["status"]>("all");
+  const [openNew, setOpenNew] = useState(false);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -61,7 +63,7 @@ function WarehouseListPage() {
       const okF = filter === "all" || r.status === filter;
       return okQ && okF;
     });
-  }, [q, filter]);
+  }, [q, filter, rows]);
 
   const totalCap = rows.reduce((a, b) => a + b.capacity, 0);
   const totalUsed = rows.reduce((a, b) => a + b.used, 0);
@@ -75,6 +77,13 @@ function WarehouseListPage() {
     { label: "Stock Value", value: money(totalValue), icon: Package, grad: "var(--gradient-primary)", sub: "Retail valuation" },
   ];
 
+  const handleCreate = (r: Omit<Row, "id" | "initials" | "trend" | "used" | "skus" | "value">) => {
+    const initials = r.manager.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "WH";
+    const next: Row = { ...r, id: crypto.randomUUID(), initials, used: 0, skus: 0, value: 0, trend: 0 };
+    setRows((prev) => [next, ...prev]);
+    setOpenNew(false);
+  };
+
   return (
     <DashboardShell title="Warehouse List" crumb="Warehouses · Warehouse List">
       <PageHeader
@@ -87,7 +96,11 @@ function WarehouseListPage() {
             <button className="h-10 px-4 rounded-xl border border-border bg-card/60 text-sm font-medium hover:border-primary/50 transition inline-flex items-center gap-2">
               <Download size={15} /> Export
             </button>
-            <button className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95 transition inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
+            <button
+              onClick={() => setOpenNew(true)}
+              className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95 transition inline-flex items-center gap-2"
+              style={{ background: "var(--gradient-primary)" }}
+            >
               <Plus size={15} /> New Warehouse
             </button>
           </div>
@@ -148,9 +161,7 @@ function WarehouseListPage() {
 
       {/* Cards grid — mobile view */}
       <section className="grid grid-cols-1 md:grid-cols-2 xl:hidden gap-4">
-        {filtered.map((r) => (
-          <WarehouseCard key={r.id} r={r} />
-        ))}
+        {filtered.map((r) => (<WarehouseCard key={r.id} r={r} />))}
       </section>
 
       {/* Table — desktop view */}
@@ -171,7 +182,7 @@ function WarehouseListPage() {
             </thead>
             <tbody>
               {filtered.map((r) => {
-                const pct = Math.round((r.used / r.capacity) * 100);
+                const pct = r.capacity ? Math.round((r.used / r.capacity) * 100) : 0;
                 const s = statusMeta[r.status];
                 const barGrad = pct >= 90 ? "linear-gradient(90deg,#f43f5e,#f59e0b)" : pct >= 70 ? "linear-gradient(90deg,#f59e0b,#facc15)" : "var(--gradient-primary)";
                 return (
@@ -250,6 +261,8 @@ function WarehouseListPage() {
           </div>
         </div>
       </section>
+
+      {openNew && <NewWarehouseModal onClose={() => setOpenNew(false)} onCreate={handleCreate} nextCode={`WH-${String(rows.length + 1).padStart(2, "0")}`} />}
     </DashboardShell>
   );
 }
@@ -263,7 +276,7 @@ function IconBtn({ children, label }: { children: React.ReactNode; label: string
 }
 
 function WarehouseCard({ r }: { r: Row }) {
-  const pct = Math.round((r.used / r.capacity) * 100);
+  const pct = r.capacity ? Math.round((r.used / r.capacity) * 100) : 0;
   const s = statusMeta[r.status];
   const barGrad = pct >= 90 ? "linear-gradient(90deg,#f43f5e,#f59e0b)" : pct >= 70 ? "linear-gradient(90deg,#f59e0b,#facc15)" : "var(--gradient-primary)";
   return (
@@ -273,9 +286,7 @@ function WarehouseCard({ r }: { r: Row }) {
           <Warehouse size={20} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold truncate">{r.name}</p>
-          </div>
+          <p className="font-semibold truncate">{r.name}</p>
           <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5"><MapPin size={11} /> {r.city} · {r.code}</p>
         </div>
         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-semibold ${s.cls}`}>
@@ -315,7 +326,7 @@ function WarehouseCard({ r }: { r: Row }) {
   );
 }
 
-function Stat({ label, value, icon: Icon, tone }: { label: string; value: string; icon: typeof CheckCircle2; tone?: "up" | "down" }) {
+function Stat({ label, value, icon: Icon, tone }: { label: string; value: string; icon: typeof TrendingUp; tone?: "up" | "down" }) {
   const color = tone === "up" ? "text-emerald-400" : tone === "down" ? "text-rose-400" : "text-foreground";
   return (
     <div className="rounded-xl border border-border/60 bg-background/40 py-2.5">
@@ -328,5 +339,103 @@ function Stat({ label, value, icon: Icon, tone }: { label: string; value: string
   );
 }
 
-// Suppress unused import warnings for icons kept for design tokens.
-void AlertTriangle; void CheckCircle2;
+function NewWarehouseModal({
+  onClose, onCreate, nextCode,
+}: {
+  onClose: () => void;
+  onCreate: (r: { code: string; name: string; city: string; manager: string; capacity: number; status: Row["status"] }) => void;
+  nextCode: string;
+}) {
+  const [form, setForm] = useState({
+    code: nextCode,
+    name: "",
+    city: "",
+    manager: "",
+    capacity: 5000,
+    status: "active" as Row["status"],
+  });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.city.trim() || !form.manager.trim()) return;
+    onCreate(form);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-background/70 backdrop-blur-sm" onClick={onClose}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={submit}
+        className="w-full max-w-lg glass-card rounded-3xl p-6 md:p-7 relative"
+      >
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-primary)" }} />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl grid place-items-center text-primary-foreground shadow-[var(--shadow-glow)]" style={{ background: "var(--gradient-primary)" }}>
+                <Warehouse size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">New Warehouse</h3>
+                <p className="text-[12px] text-muted-foreground">Register a new storage location.</p>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} aria-label="Close" className="h-8 w-8 grid place-items-center rounded-lg border border-border bg-background/40 text-muted-foreground hover:text-foreground">
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Code">
+              <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="input" />
+            </Field>
+            <Field label="Capacity (units)">
+              <input type="number" min={0} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} className="input" />
+            </Field>
+            <Field label="Name" full>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Main Godown — Karachi" className="input" required />
+            </Field>
+            <Field label="City / Location" full>
+              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Karachi, PK" className="input" required />
+            </Field>
+            <Field label="Manager" full>
+              <input value={form.manager} onChange={(e) => setForm({ ...form, manager: e.target.value })} placeholder="Full name" className="input" required />
+            </Field>
+            <Field label="Status" full>
+              <div className="flex gap-2">
+                {(["active", "low", "maintenance"] as const).map((s) => (
+                  <button
+                    key={s} type="button" onClick={() => setForm({ ...form, status: s })}
+                    className={`flex-1 h-10 rounded-xl border text-xs font-semibold transition ${form.status === s ? "border-primary/60 text-foreground" : "border-border text-muted-foreground hover:text-foreground"}`}
+                    style={form.status === s ? { background: "linear-gradient(135deg, oklch(0.7 0.19 285 / 0.22), oklch(0.72 0.18 320 / 0.10))" } : undefined}
+                  >
+                    {statusMeta[s].label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-2">
+            <button type="button" onClick={onClose} className="h-10 px-4 rounded-xl border border-border text-sm font-medium hover:bg-card/60 transition">
+              Cancel
+            </button>
+            <button type="submit" className="h-10 px-4 rounded-xl text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 shadow-[var(--shadow-glow)] hover:opacity-95 transition" style={{ background: "var(--gradient-primary)" }}>
+              <Check size={15} /> Create Warehouse
+            </button>
+          </div>
+        </div>
+        <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:12px;border:1px solid hsl(var(--border));background:oklch(1 0 0 / 0.02);font-size:13px;outline:none;transition:border-color .15s}.input:focus{border-color:oklch(0.7 0.19 285 / 0.7)}`}</style>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${full ? "col-span-2" : ""}`}>
+      <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
