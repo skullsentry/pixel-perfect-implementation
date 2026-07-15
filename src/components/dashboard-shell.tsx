@@ -30,9 +30,9 @@ export const nav: { label: string; items: NavItem[] }[] = [
       ]},
       { icon: Warehouse, name: "Warehouses", children: [
         { name: "Warehouse List", to: "/warehouse-list" },
-        { name: "Stock Transfer", to: "/module/stock-transfer" },
-        { name: "Stock Adjustment", to: "/module/stock-adjustment" },
-        { name: "Low Stock Alerts", to: "/module/low-stock-alerts" },
+        { name: "Stock Transfer", to: "/stock-transfer" },
+        { name: "Stock Adjustment", to: "/stock-adjustment" },
+        { name: "Low Stock Alerts", to: "/low-stock-alerts" },
       ]},
       { icon: Truck, name: "Purchases", children: [
         { name: "Purchase Entry", to: "/module/purchase-entry" },
