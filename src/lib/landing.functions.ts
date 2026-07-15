@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-export type LandingSection = { key: string; data: Record<string, unknown>; sort_order: number };
+type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
+export type LandingSection = { key: string; data: Json; sort_order: number };
 
 export const getLandingSections = createServerFn({ method: "GET" }).handler(async () => {
   const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
