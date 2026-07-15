@@ -802,13 +802,20 @@ function FormView({ mod }: { mod: ModuleDef }) {
         <section className="glass-card rounded-2xl p-5 md:p-6">
           <h3 className="text-sm font-bold mb-4">Entry Details</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Reference No"><input defaultValue="AUTO-2026-0142" className="input" /></Field>
-            <Field label="Date"><input type="date" defaultValue="2026-07-15" className="input" /></Field>
+            <Field label="Reference No"><input value={meta.ref} onChange={(e) => setMeta({ ...meta, ref: e.target.value })} className="input" /></Field>
+            <Field label="Date"><input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} className="input" /></Field>
             <Field label="Party / Customer" full>
-              <select className="input"><option>Select party…</option><option>Al Karim Traders</option><option>Bismillah Suppliers</option><option>Faisal Foods</option></select>
+              <select value={meta.party} onChange={(e) => setMeta({ ...meta, party: e.target.value })} className="input">
+                <option value="">Select party…</option>
+                <option>Al Karim Traders</option><option>Bismillah Suppliers</option><option>Faisal Foods</option>
+              </select>
             </Field>
-            <Field label="Warehouse"><select className="input"><option>WH-01 Karachi</option><option>WH-02 Lahore</option></select></Field>
-            <Field label="Payment Mode"><select className="input"><option>Cash</option><option>Bank Transfer</option><option>Credit</option><option>Split</option></select></Field>
+            <Field label="Warehouse">
+              <select value={meta.warehouse} onChange={(e) => setMeta({ ...meta, warehouse: e.target.value })} className="input"><option>WH-01 Karachi</option><option>WH-02 Lahore</option></select>
+            </Field>
+            <Field label="Payment Mode">
+              <select value={meta.payment} onChange={(e) => setMeta({ ...meta, payment: e.target.value })} className="input"><option>Cash</option><option>Bank Transfer</option><option>Credit</option><option>Split</option></select>
+            </Field>
           </div>
         </section>
 
@@ -851,7 +858,7 @@ function FormView({ mod }: { mod: ModuleDef }) {
 
         <section className="glass-card rounded-2xl p-5 md:p-6">
           <h3 className="text-sm font-bold mb-3">Notes</h3>
-          <textarea rows={3} placeholder="Optional notes, terms, or internal reference…" className="input min-h-[80px] py-2 resize-none" />
+          <textarea rows={3} value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} placeholder="Optional notes, terms, or internal reference…" className="input min-h-[80px] py-2 resize-none" />
         </section>
       </div>
 
