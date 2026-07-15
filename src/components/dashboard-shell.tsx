@@ -19,20 +19,27 @@ export const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "Main",
     items: [
-      { icon: LayoutDashboard, name: "Business Control", children: [
-        { name: "Overview", to: "/" }, { name: "Live Activity" }, { name: "Daybook" },
-      ]},
+      { icon: LayoutDashboard, name: "Business Control", to: "/" },
       { icon: Boxes, name: "Product Setup", children: [
-        { name: "All Products", to: "/products" },
+        { name: "Products", to: "/products" },
         { name: "Categories", to: "/categories" },
         { name: "Brands & Companies", to: "/brands" },
         { name: "Units of Measure", to: "/units" },
       ]},
+      { icon: Settings, name: "Shop Settings" },
       { icon: Warehouse, name: "Warehouses", children: [
-        { name: "Locations" }, { name: "Stock Transfer" }, { name: "Stock Adjustment" },
+        { name: "Warehouse List" },
+        { name: "Stock Transfer" },
+        { name: "Stock Adjustment" },
+        { name: "Low Stock Alerts" },
       ]},
       { icon: Truck, name: "Purchases", children: [
-        { name: "New Purchase" }, { name: "Purchase History" }, { name: "Purchase Returns" },
+        { name: "Purchase Entry" },
+        { name: "Purchase List" },
+        { name: "Purchase Orders" },
+        { name: "Lost & Damaged Items" },
+        { name: "Purchase Return" },
+        { name: "Supplier Payments" },
       ]},
     ],
   },
@@ -40,13 +47,23 @@ export const nav: { label: string; items: NavItem[] }[] = [
     label: "Finance",
     items: [
       { icon: ReceiptText, name: "Sales & Billing", children: [
-        { name: "New Invoice" }, { name: "Invoice History" }, { name: "Sales Returns" }, { name: "Quotations" },
+        { name: "Sales Invoice" },
+        { name: "Paid Sales List" },
+        { name: "Unpaid Sales List" },
+        { name: "Loans" },
+        { name: "Sales Return" },
+        { name: "Recovery Entry" },
       ]},
       { icon: BookUser, name: "Ledgers & Profiles", children: [
-        { name: "Customers" }, { name: "Suppliers" }, { name: "Account Groups" },
-      ]},
-      { icon: BookOpenText, name: "Finance Book", children: [
-        { name: "Cash Book" }, { name: "Bank Book" }, { name: "Expenses" }, { name: "Journal Entries" },
+        { name: "All Ledgers List" },
+        { name: "Customer Ledgers" },
+        { name: "Supplier Ledgers" },
+        { name: "Employee Ledgers" },
+        { name: "Sales Man Ledgers" },
+        { name: "Expenses Ledgers" },
+        { name: "General Ledgers" },
+        { name: "Bank Accounts" },
+        { name: "Cash & Bank Balances" },
       ]},
     ],
   },
@@ -54,16 +71,21 @@ export const nav: { label: string; items: NavItem[] }[] = [
     label: "Operations",
     items: [
       { icon: Users, name: "Personnel & HR", children: [
-        { name: "Employees" }, { name: "Attendance" }, { name: "Payroll" },
+        { name: "Ledger Statements" },
+        { name: "Advance & Loans" },
+        { name: "Salary Payouts" },
+      ]},
+      { icon: BookOpenText, name: "Finance Book", children: [
+        { name: "Cash Book" },
+        { name: "Bank Book" },
+        { name: "Income Entry" },
+        { name: "Expense Entry" },
       ]},
       { icon: BarChart3, name: "Reports Hub", children: [
-        { name: "Sales Reports" }, { name: "Purchase Reports" }, { name: "Inventory Reports" }, { name: "Profit & Loss" },
-      ]},
-      { icon: AlertTriangle, name: "Low Stock", badge: 6, children: [
-        { name: "Reorder List", badge: 6 }, { name: "Out of Stock" }, { name: "Reorder Rules" },
-      ]},
-      { icon: Settings, name: "Shop Settings", children: [
-        { name: "Profile" }, { name: "Users & Roles" }, { name: "Preferences" }, { name: "Backups" },
+        { name: "Product Report" },
+        { name: "Stock Report" },
+        { name: "Purchase Report" },
+        { name: "Sales Report" },
       ]},
     ],
   },
@@ -115,25 +137,38 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
                 const Icon = it.icon;
                 const isOpen = openMenu === it.name;
                 const hasActiveChild = it.children?.some((c) => c.to === pathname);
-                const isActive = isOpen || hasActiveChild;
+                const isSelfActive = it.to === pathname;
+                const isActive = isOpen || hasActiveChild || isSelfActive;
+                const topCls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                  isActive ? "text-foreground shadow-[var(--shadow-md)]" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60"
+                }`;
+                const topStyle = isActive ? { background: "linear-gradient(135deg, oklch(0.7 0.19 285 / 0.22), oklch(0.72 0.18 320 / 0.12))", borderLeft: "2px solid oklch(0.7 0.19 285)" } : undefined;
+                const topInner = (
+                  <>
+                    <Icon size={17} className={isActive ? "text-primary-glow" : ""} />
+                    <span className="flex-1 text-left">{it.name}</span>
+                    {it.badge ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "var(--gradient-sunset)" }}>{it.badge}</span>
+                    ) : it.children ? (
+                      <ChevronRight size={14} className={`opacity-40 group-hover:opacity-80 transition-transform ${isOpen ? "rotate-90 opacity-90" : ""}`} />
+                    ) : null}
+                  </>
+                );
                 return (
                   <div key={it.name} className="mb-1">
-                    <button
-                      onClick={() => setOpenMenu(isOpen ? null : it.name)}
-                      aria-expanded={isOpen}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                        isActive ? "text-foreground shadow-[var(--shadow-md)]" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60"
-                      }`}
-                      style={isActive ? { background: "linear-gradient(135deg, oklch(0.7 0.19 285 / 0.22), oklch(0.72 0.18 320 / 0.12))", borderLeft: "2px solid oklch(0.7 0.19 285)" } : undefined}
-                    >
-                      <Icon size={17} className={isActive ? "text-primary-glow" : ""} />
-                      <span className="flex-1 text-left">{it.name}</span>
-                      {it.badge ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "var(--gradient-sunset)" }}>{it.badge}</span>
-                      ) : (
-                        <ChevronRight size={14} className={`opacity-40 group-hover:opacity-80 transition-transform ${isOpen ? "rotate-90 opacity-90" : ""}`} />
-                      )}
-                    </button>
+                    {it.children ? (
+                      <button onClick={() => setOpenMenu(isOpen ? null : it.name)} aria-expanded={isOpen} className={topCls} style={topStyle}>
+                        {topInner}
+                      </button>
+                    ) : it.to ? (
+                      <Link to={it.to} onClick={onClose} className={topCls} style={topStyle}>
+                        {topInner}
+                      </Link>
+                    ) : (
+                      <button onClick={onClose} className={topCls} style={topStyle}>
+                        {topInner}
+                      </button>
+                    )}
                     {it.children && (
                       <div className="grid transition-all duration-300 ease-out"
                         style={{ gridTemplateRows: isOpen ? "1fr" : "0fr", opacity: isOpen ? 1 : 0 }}>
