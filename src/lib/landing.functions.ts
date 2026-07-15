@@ -27,7 +27,7 @@ export const getLandingSections = createServerFn({ method: "GET" }).handler(asyn
 });
 
 export const updateLandingSection = createServerFn({ method: "POST" })
-  .inputValidator((v: { key: string; data: Record<string, unknown> }) => v)
+  .inputValidator((v: { key: string; data: Json }) => v)
   .handler(async ({ data: input }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Admin gate is enforced by RLS + we require caller to be admin via a separate check.
