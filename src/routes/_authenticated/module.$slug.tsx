@@ -525,6 +525,8 @@ function ReportView({ mod }: { mod: ModuleDef }) {
 
   return (
     <>
+      <PageHeader title={mod.title} subtitle={mod.description} icon={mod.icon} grad={mod.grad}
+        actions={<HeaderActions grad={mod.grad} primaryLabel="Generate Report" onPrimary={() => window.print()} />} />
       <KpiStrip items={[
         { label: "Revenue", value: money(totalRevenue), sub: "This period", icon: TrendingUp, grad: mod.grad, tone: "up" },
         { label: "Units Moved", value: fmt(totalUnits), sub: `${rows.length} items`, icon: BarChart3, grad: "var(--gradient-accent)" },
